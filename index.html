@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>After-School Checklist</title>
+<style>
+  :root {
+    --bg: #eaf4fb;
+    --card-bg: #ffffff;
+    --ink: #1c3a5e;
+    --ink-soft: #5c7a99;
+    --border: #d7e8f5;
+    --accent: #1f74b8;
+    --accent-soft: #e2f0fb;
+    --today-ring: #f5b300;
+    --today-bg: #fff6da;
+    --done: #a3b3c4;
+    --sun: #ffcb2e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 92% 4%, rgba(255,203,46,0.55) 0%, rgba(255,203,46,0.22) 9%, rgba(255,203,46,0) 16%),
+      var(--bg);
+    color: var(--ink);
+    padding: 32px 20px 60px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  header { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .sun-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffe066 0%, var(--sun) 70%);
+    box-shadow: 0 0 0 5px rgba(255,203,46,0.25);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: 1.7rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .quicklinks {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .qlink {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid transparent;
+    padding: 7px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .qlink:hover { border-color: var(--accent); }
+  .qlink.unset { opacity: 0.6; font-style: italic; }
+  #edit-links-btn {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px dashed var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  #edit-links-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #today-label {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+    background: var(--accent-soft);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  #week-summary {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  button#reset-btn, button#print-btn {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  button#reset-btn:hover, button#print-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+  }
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .day-card.today {
+    border: 2px solid var(--today-ring);
+    background: var(--today-bg);
+  }
+  .day-name {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .day-card.today .day-name { color: var(--today-ring); }
+  .day-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.25;
+  }
+  .items { list-style: none; margin: 0; padding: 0; }
+  .items li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-bottom: 10px;
+    font-size: 0.93rem;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .items li input[type="checkbox"] {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .items li.checked span { color: var(--done); text-decoration: line-through; }
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 7px;
+    border-radius: 6px;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+
+  .day-notes {
+    width: 100%;
+    margin-top: 4px;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: #fbfdfe;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    resize: vertical;
+    min-height: 44px;
+  }
+  .day-notes::placeholder { color: #a9bccb; }
+
+  .tracker {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .tracker-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .tracker-add { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tracker-add input {
+    flex: 1;
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .tracker-add button {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .tracker-list { list-style: none; margin: 0; padding: 0; max-height: 130px; overflow-y: auto; }
+  .tracker-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tracker-list li:last-child { border-bottom: none; }
+  .tracker-date { color: var(--ink-soft); font-size: 0.75rem; margin-left: 6px; }
+  .tracker-remove {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 4px;
+  }
+  .tracker-remove:hover { color: #c0392b; }
+  .tracker-empty { font-size: 0.8rem; color: var(--ink-soft); font-style: italic; }
+
+  .progress-row {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+  footer {
+    margin-top: 34px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media print {
+    body { background: none !important; padding: 10px; }
+    .quicklinks, .toolbar, footer, .tracker-add, .sun-icon { display: none !important; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .day-card { break-inside: avoid; border: 1px solid #999; background: #fff; }
+    .day-card.today { border: 2px solid #999; background: #fff; }
+    .items li input[type="checkbox"] { accent-color: #000; }
+    .day-notes { border: 1px solid #bbb; min-height: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="sun-icon"></div>
+    <div>
+      <h1>After-School Checklist</h1>
+      <p class="sub">A quick weekday routine so nothing slips through the cracks.</p>
+    </div>
+  </header>
+
+  <div class="quicklinks" id="quicklinks">
+    <a class="qlink" id="ql-data" href="#">📊 Data / Gradebook</a>
+    <a class="qlink" id="ql-slides" href="#">🖥️ Slides</a>
+    <a class="qlink" id="ql-printer" href="#">🖨️ Printer</a>
+    <button id="edit-links-btn" onclick="editLinks()">Edit links</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span id="today-label"></span>
+      <span id="week-summary"></span>
+    </div>
+    <div class="toolbar-right">
+      <button id="print-btn" onclick="window.print()">Print</button>
+      <button id="reset-btn" onclick="resetAll()">Reset all checkboxes</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Monday -->
+    <div class="day-card" data-day="1">
+      <div class="day-name">Monday</div>
+      <div class="day-title">Slide Building Day</div>
+      <ul class="items">
+        <li onclick="toggle(this)" data-id="d1-0"><input type="checkbox"><span>Look over today's data &amp; enter anything missing</span></li>
+        <li onclick="toggle(this)" data-id="d1-1"><input type="checkbox"><span>Start/build slides for <strong>next</strong> week's lessons</span></li>
+        <li onclick="toggle(this)" data-id="d1-2"><input type="checkbox"><span>Quick check: anything from the weekend to follow up on?</span></li>
+      </ul>
+      <textarea class="day-notes" data-day-id="d1" placeholder="Notes for this week..." oninput="saveNote(this)"></textarea>
+      <div class="progress-row"><span class="prog">0/3 done</span></div>
+    </div>
+
+    <!-- Tuesday -->
+    <div class="day-card" data-day="2">
+      <div class="day-name">Tuesday</div>
+      <div class="day-title">Printing Day</div>
+      <ul class="items">
+        <li onclick="toggle(this)" data-id="d2-0"><input type="checkbox"><span>Look over today's data &amp; enter anything missing</span></li>
+        <li onclick="toggle(this)" data-id="d2-1"><input type="checkbox"><span>Print handouts/copies needed for <strong>next</strong> week</span></li>
+        <li onclick="toggle(this)" data-id="d2-2"><input type="checkbox"><span>Restock printer paper/supplies if low</span></li>
+      </ul>
+      <textarea class="day-notes" data-day-id="d2" placeholder="Notes for this week..." oninput="saveNote(this)"></textarea>
+      <div class="progress-row"><span class="prog">0/3 done</span></div>
+    </div>
+
+    <!-- Wednesday -->
+    <div class="day-card" data-day="3">
+      <div class="day-name">Wednesday</div>
+      <div class="day-title">Slides &amp; Printing Due</div>
+      <ul class="items">
+        <li onclick="toggle(this)" data-id="d3-0"><input type="checkbox"><span>Look over today's data &amp; enter anything missing</span></li>
+        <li onclick="toggle(this)" data-id="d3-1"><input type="checkbox"><span><strong>Deadline:</strong> finish/confirm next week's slides</span></li>
+        <li onclick="toggle(this)" data-id="d3-2"><input type="checkbox"><span><strong>Deadline:</strong> finish/confirm next week's printing</span></li>
+      </ul>
+      <textarea class="day-notes" data-day-id="d3" placeholder="Notes for this week..." oninput="saveNote(this)"></textarea>
+      <div class="progress-row"><span class="prog">0/3 done</span></div>
+    </div>
+
+    <!-- Thursday -->
+    <div class="day-card" data-day="4">
+      <div class="day-name">Thursday</div>
+      <div class="day-title">Positive Notes Day</div>
+      <ul class="items">
+        <li onclick="toggle(this)" data-id="d4-0"><input type="checkbox"><span>Look over today's data &amp; enter anything missing</span></li>
+        <li onclick="toggle(this)" data-id="d4-1"><input type="checkbox"><span>Write positive notes to students</span></li>
+      </ul>
+      <div class="tracker">
+        <div class="tracker-title">Recent positive notes</div>
+        <div class="tracker-add">
+          <input type="text" id="tracker-input" placeholder="Student name" onkeydown="if(event.key==='Enter'){addTrackerEntry();}">
+          <button onclick="addTrackerEntry()">Add</button>
+        </div>
+        <ul class="tracker-list" id="tracker-list"></ul>
+      </div>
+      <textarea class="day-notes" data-day-id="d4" placeholder="Notes for this week..." oninput="saveNote(this)"></textarea>
+      <div class="progress-row"><span class="prog">0/2 done</span></div>
+    </div>
+
+    <!-- Friday -->
+    <div class="day-card" data-day="5">
+      <div class="day-name">Friday</div>
+      <div class="day-title">Homework Area Day</div>
+      <ul class="items">
+        <li onclick="toggle(this)" data-id="d5-0"><input type="checkbox"><span><span class="tag">AM</span>Change out the homework area/board</span></li>
+        <li onclick="toggle(this)" data-id="d5-1"><input type="checkbox"><span>Look over today's data &amp; enter anything missing</span></li>
+        <li onclick="toggle(this)" data-id="d5-2"><input type="checkbox"><span>Tidy up and wrap loose ends before the weekend</span></li>
+      </ul>
+      <textarea class="day-notes" data-day-id="d5" placeholder="Notes for this week..." oninput="saveNote(this)"></textarea>
+      <div class="progress-row"><span class="prog">0/3 done</span></div>
+    </div>
+  </div>
+
+  <footer id="footer-note">Checkmarks &amp; notes reset each Monday for the new week. Your quick links and the positive-notes log stick around from week to week.</footer>
+</div>
+
+<script>
+  const STORAGE_KEY = 'afterSchoolChecklist_v1';
+  const LINKS_KEY = 'afterSchoolLinks_v1';
+  const TRACKER_KEY = 'afterSchoolNotesTracker_v1';
+  const LINK_LABELS = { data: 'Data / Gradebook', slides: 'Slides platform', printer: 'Printer / print queue' };
+
+  function mondayOf(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 Sun ... 6 Sat
+    const diff = (day === 0 ? -6 : 1 - day); // shift back to Monday
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  }
+
+  function safeGet(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function safeSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* ignore */ }
+  }
+
+  // ---------- Checklist + per-day notes (weekly-scoped) ----------
+  function loadState() { return safeGet(STORAGE_KEY); }
+  function saveState(state) { safeSet(STORAGE_KEY, state); }
+
+  function blankState() { return { weekOf: mondayOf(new Date()), checked: {}, notes: {} }; }
+
+  function updateProgress(card) {
+    const items = card.querySelectorAll('.items li');
+    const checked = card.querySelectorAll('.items li.checked').length;
+    card.querySelector('.prog').textContent = checked + '/' + items.length + ' done';
+  }
+
+  function updateWeekSummary() {
+    const allItems = document.querySelectorAll('.items li');
+    const allChecked = document.querySelectorAll('.items li.checked');
+    document.getElementById('week-summary').textContent =
+      allChecked.length + '/' + allItems.length + ' tasks done this week';
+  }
+
+  function persistItem(li) {
+    const cb = li.querySelector('input[type="checkbox"]');
+    const state = loadState() || blankState();
+    if (!state.notes) state.notes = {};
+    state.checked[li.dataset.id] = cb.checked;
+    saveState(state);
+  }
+
+  function saveNote(textarea) {
+    const state = loadState() || blankState();
+    if (!state.notes) state.notes = {};
+    state.notes[textarea.dataset.dayId] = textarea.value;
+    saveState(state);
+  }
+
+  function toggle(li) {
+    const cb = li.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    li.classList.toggle('checked', cb.checked);
+    updateProgress(li.closest('.day-card'));
+    updateWeekSummary();
+    persistItem(li);
+  }
+
+  function resetAll() {
+    document.querySelectorAll('.items li').forEach(li => {
+      li.querySelector('input[type="checkbox"]').checked = false;
+      li.classList.remove('checked');
+    });
+    document.querySelectorAll('.day-notes').forEach(t => t.value = '');
+    document.querySelectorAll('.day-card').forEach(updateProgress);
+    updateWeekSummary();
+    saveState(blankState());
+  }
+
+  document.querySelectorAll('.items input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('click', e => e.stopPropagation());
+    cb.addEventListener('change', function() {
+      const li = this.closest('li');
+      li.classList.toggle('checked', this.checked);
+      updateProgress(li.closest('.day-card'));
+      updateWeekSummary();
+      persistItem(li);
+    });
+  });
+
+  const jsDay = new Date().getDay();
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('today-label').textContent = "Today: " + dayNames[jsDay];
+  document.querySelectorAll('.day-card').forEach(card => {
+    if (parseInt(card.dataset.day, 10) === jsDay) card.classList.add('today');
+  });
+
+  (function restoreChecklist() {
+    const currentWeek = mondayOf(new Date());
+    const state = loadState();
+    if (state && state.weekOf === currentWeek) {
+      Object.keys(state.checked || {}).forEach(id => {
+        if (!state.checked[id]) return;
+        const li = document.querySelector('.items li[data-id="' + id + '"]');
+        if (!li) return;
+        li.querySelector('input[type="checkbox"]').checked = true;
+        li.classList.add('checked');
+      });
+      Object.keys(state.notes || {}).forEach(dayId => {
+        const t = document.querySelector('.day-notes[data-day-id="' + dayId + '"]');
+        if (t) t.value = state.notes[dayId];
+      });
+    } else {
+      saveState(blankState());
+    }
+    document.querySelectorAll('.day-card').forEach(updateProgress);
+    updateWeekSummary();
+
+    const noteEl = document.getElementById('footer-note');
+    if (!loadState()) {
+      noteEl.textContent = "Your browser doesn't support saved progress here, so everything resets on reload.";
+    }
+  })();
+
+  // ---------- Quick links (persist indefinitely) ----------
+  function loadLinks() { return safeGet(LINKS_KEY) || {}; }
+  function saveLinks(links) { safeSet(LINKS_KEY, links); }
+
+  function applyLinks() {
+    const links = loadLinks();
+    ['data', 'slides', 'printer'].forEach(key => {
+      const el = document.getElementById('ql-' + key);
+      const url = links[key];
+      if (url) {
+        el.href = url;
+        el.target = '_blank';
+        el.rel = 'noopener';
+        el.classList.remove('unset');
+      } else {
+        el.href = '#';
+        el.removeAttribute('target');
+        el.classList.add('unset');
+      }
+    });
+  }
+
+  function promptForLink(key) {
+    const links = loadLinks();
+    const current = links[key] || '';
+    const val = window.prompt('URL for ' + LINK_LABELS[key] + ':', current);
+    if (val === null) return;
+    links[key] = val.trim();
+    saveLinks(links);
+    applyLinks();
+  }
+
+  function editLinks() {
+    ['data', 'slides', 'printer'].forEach(promptForLink);
+  }
+
+  ['data', 'slides', 'printer'].forEach(key => {
+    document.getElementById('ql-' + key).addEventListener('click', function(e) {
+      const links = loadLinks();
+      if (!links[key]) {
+        e.preventDefault();
+        promptForLink(key);
+      }
+    });
+  });
+
+  applyLinks();
+
+  // ---------- Positive-notes tracker (persists indefinitely) ----------
+  function loadTracker() { return safeGet(TRACKER_KEY) || []; }
+  function saveTracker(list) { safeSet(TRACKER_KEY, list); }
+
+  function renderTracker() {
+    const list = loadTracker();
+    const el = document.getElementById('tracker-list');
+    el.innerHTML = '';
+    if (list.length === 0) {
+      el.innerHTML = '<li class="tracker-empty">No notes logged yet</li>';
+      return;
+    }
+    list.forEach((entry, idx) => {
+      const li = document.createElement('li');
+      const left = document.createElement('span');
+      left.textContent = entry.name;
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'tracker-date';
+      dateSpan.textContent = entry.date;
+      left.appendChild(dateSpan);
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tracker-remove';
+      removeBtn.textContent = '×';
+      removeBtn.onclick = () => removeTrackerEntry(idx);
+      li.appendChild(left);
+      li.appendChild(removeBtn);
+      el.appendChild(li);
+    });
+  }
+
+  function addTrackerEntry() {
+    const input = document.getElementById('tracker-input');
+    const name = input.value.trim();
+    if (!name) return;
+    const list = loadTracker();
+    list.unshift({ name: name, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) });
+    if (list.length > 25) list.length = 25;
+    saveTracker(list);
+    input.value = '';
+    renderTracker();
+  }
+
+  function removeTrackerEntry(idx) {
+    const list = loadTracker();
+    list.splice(idx, 1);
+    saveTracker(list);
+    renderTracker();
+  }
+
+  renderTracker();
+</script>
+</body>
+</html>
